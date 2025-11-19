@@ -1,0 +1,35 @@
+---
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: testcase-tracker
+  labels:
+    app: testcase-tracker
+spec:
+  source:
+    type: Git
+    git:
+      uri: https://github.com/YOUR_USERNAME/YOUR_REPO.git
+      ref: main
+    contextDir: /
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+  output:
+    to:
+      kind: ImageStreamTag
+      name: testcase-tracker:latest
+  triggers:
+  - type: ConfigChange
+  - type: ImageChange
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: testcase-tracker
+  labels:
+    app: testcase-tracker
+spec:
+  lookupPolicy:
+    local: false

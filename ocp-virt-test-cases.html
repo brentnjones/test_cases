@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenShift Virtualization Test Plan Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #cc0000 0%, #8b0000 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #cc0000;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #a30000;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(204, 0, 0, 0.4);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-group select {
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .stats {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #cc0000;
+        }
+
+        .stat-card.pass {
+            border-left-color: #10b981;
+        }
+
+        .stat-card.fail {
+            border-left-color: #ef4444;
+        }
+
+        .stat-card.pending {
+            border-left-color: #f59e0b;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            padding: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        thead {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .phase-cell {
+            font-weight: 600;
+            color: #cc0000;
+        }
+
+        select.status-select {
+            padding: 6px 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        select.status-select.pass {
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+
+        select.status-select.fail {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        select.status-select.pending {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        input[type="date"] {
+            padding: 6px 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .priority-high {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .priority-medium {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+
+        .priority-low {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .phase-header {
+            background: #cc0000;
+            color: white;
+            font-weight: 700;
+        }
+
+        .phase-header td {
+            padding: 12px 15px;
+            border: none;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .table-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 OpenShift Virtualization Test Plan Tracker</h1>
+            <p>VMware Migration Evaluation - Comprehensive Test Suite</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-success" onclick="exportToExcel()">
+                📊 Export to Excel
+            </button>
+            <button class="btn btn-primary" onclick="saveProgress()">
+                💾 Save Progress
+            </button>
+            <button class="btn btn-primary" onclick="loadProgress()">
+                📂 Load Progress
+            </button>
+            <div class="filter-group">
+                <label>Filter by Phase:</label>
+                <select id="phaseFilter" onchange="filterTable()">
+                    <option value="all">All Phases</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Filter by Status:</label>
+                <select id="statusFilter" onchange="filterTable()">
+                    <option value="all">All Statuses</option>
+                    <option value="Pass">Pass</option>
+                    <option value="Fail">Fail</option>
+                    <option value="Pending">Pending</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Total Tests</div>
+                <div class="stat-value" id="totalTests">0</div>
+            </div>
+            <div class="stat-card pass">
+                <div class="stat-label">Passed</div>
+                <div class="stat-value" id="passedTests">0</div>
+            </div>
+            <div class="stat-card fail">
+                <div class="stat-label">Failed</div>
+                <div class="stat-value" id="failedTests">0</div>
+            </div>
+            <div class="stat-card pending">
+                <div class="stat-label">Pending</div>
+                <div class="stat-value" id="pendingTests">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Completion %</div>
+                <div class="stat-value" id="completionPct">0%</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="testTable">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Test ID</th>
+                        <th style="width: 150px;">Phase</th>
+                        <th style="width: 250px;">Test Case</th>
+                        <th>Objective</th>
+                        <th style="width: 100px;">Priority</th>
+                        <th style="width: 120px;">Status</th>
+                        <th style="width: 120px;">Date Tested</th>
+                        <th style="width: 150px;">Tester</th>
+                        <th style="width: 250px;">Comments</th>
+                    </tr>
+                </thead>
+                <tbody id="testTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const testCases = [
+            // Phase 1: Installation and Configuration
+            { phase: 'Phase 1: Installation', id: '1.1', name: 'OpenShift Virtualization Operator Installation', objective: 'Validate operator installation and configuration', priority: 'High' },
+            { phase: 'Phase 1: Installation', id: '1.2', name: 'Host Device Assignment', objective: 'Test SR-IOV and GPU passthrough capabilities', priority: 'Medium' },
+            
+            // Phase 2: Storage Testing
+            { phase: 'Phase 2: Storage', id: '2.1', name: 'Storage Backend Integration', objective: 'Validate multiple storage backend support', priority: 'High' },
+            { phase: 'Phase 2: Storage', id: '2.2', name: 'Storage Performance Benchmarking', objective: 'Compare storage performance with VMware baseline', priority: 'High' },
+            { phase: 'Phase 2: Storage', id: '2.3', name: 'Storage Live Migration', objective: 'Test live storage migration capabilities', priority: 'Medium' },
+            
+            // Phase 3: Network Testing
+            { phase: 'Phase 3: Networking', id: '3.1', name: 'Standard Pod Network', objective: 'Test basic VM networking using pod network', priority: 'High' },
+            { phase: 'Phase 3: Networking', id: '3.2', name: 'Multus and SR-IOV Networking', objective: 'Test advanced networking with multiple interfaces', priority: 'High' },
+            { phase: 'Phase 3: Networking', id: '3.3', name: 'Load Balancer and Service Integration', objective: 'Test VM exposure via Kubernetes Services', priority: 'Medium' },
+            { phase: 'Phase 3: Networking', id: '3.4', name: 'Network Policies and Microsegmentation', objective: 'Test network security and isolation', priority: 'High' },
+            
+            // Phase 4: Backup and Restore
+            { phase: 'Phase 4: Backup/Restore', id: '4.1', name: 'VM Snapshot and Restore', objective: 'Test built-in snapshot capabilities', priority: 'High' },
+            { phase: 'Phase 4: Backup/Restore', id: '4.2', name: 'OADP Backup and Recovery', objective: 'Test OpenShift API for Data Protection', priority: 'High' },
+            { phase: 'Phase 4: Backup/Restore', id: '4.3', name: 'Third-Party Backup Solutions', objective: 'Test integration with enterprise backup tools', priority: 'Medium' },
+            
+            // Phase 5: Identity and Access Management
+            { phase: 'Phase 5: IAM', id: '5.1', name: 'LDAP/Active Directory Integration', objective: 'Test enterprise directory integration', priority: 'High' },
+            { phase: 'Phase 5: IAM', id: '5.2', name: 'Multi-Tenancy and Project Isolation', objective: 'Test tenant isolation capabilities', priority: 'High' },
+            { phase: 'Phase 5: IAM', id: '5.3', name: 'Service Accounts and API Access', objective: 'Test programmatic VM management', priority: 'Medium' },
+            
+            // Phase 6: High Availability and DR
+            { phase: 'Phase 6: HA/DR', id: '6.1', name: 'Live Migration', objective: 'Test VM live migration capabilities', priority: 'High' },
+            { phase: 'Phase 6: HA/DR', id: '6.2', name: 'Node Failure and VM Restart', objective: 'Test HA behavior during node failure', priority: 'High' },
+            { phase: 'Phase 6: HA/DR', id: '6.3', name: 'Cluster Disaster Recovery', objective: 'Test disaster recovery to secondary cluster', priority: 'Medium' },
+            
+            // Phase 7: VM Lifecycle Management
+            { phase: 'Phase 7: VM Lifecycle', id: '7.1', name: 'VM Templates and Cloning', objective: 'Test VM template creation and cloning', priority: 'High' },
+            { phase: 'Phase 7: VM Lifecycle', id: '7.2', name: 'Hot-Plug Resources', objective: 'Test dynamic resource modification', priority: 'Medium' },
+            { phase: 'Phase 7: VM Lifecycle', id: '7.3', name: 'Guest Agent and Integration', objective: 'Test QEMU guest agent functionality', priority: 'Medium' },
+            
+            // Phase 8: Windows VM Support
+            { phase: 'Phase 8: Windows Support', id: '8.1', name: 'Windows VM Deployment', objective: 'Test Windows Server and desktop support', priority: 'High' },
+            { phase: 'Phase 8: Windows Support', id: '8.2', name: 'Windows-Specific Features', objective: 'Test Windows-centric capabilities', priority: 'Medium' },
+            
+            // Phase 9: Performance and Scalability
+            { phase: 'Phase 9: Performance', id: '9.1', name: 'Density Testing', objective: 'Determine maximum VM density per node', priority: 'High' },
+            { phase: 'Phase 9: Performance', id: '9.2', name: 'Application Performance Testing', objective: 'Test real-world application performance', priority: 'High' },
+            { phase: 'Phase 9: Performance', id: '9.3', name: 'Stress Testing', objective: 'Test platform under extreme conditions', priority: 'Medium' },
+            
+            // Phase 10: Monitoring and Observability
+            { phase: 'Phase 10: Monitoring', id: '10.1', name: 'Built-in Monitoring Integration', objective: 'Test OpenShift monitoring for VMs', priority: 'High' },
+            { phase: 'Phase 10: Monitoring', id: '10.2', name: 'Third-Party Monitoring Integration', objective: 'Test integration with enterprise monitoring tools', priority: 'Medium' },
+            
+            // Phase 11: Migration from VMware
+            { phase: 'Phase 11: Migration', id: '11.1', name: 'MTV (Migration Toolkit for Virtualization)', objective: 'Test automated VM migration from VMware', priority: 'High' },
+            { phase: 'Phase 11: Migration', id: '11.2', name: 'Manual Migration Process', objective: 'Document manual migration procedure', priority: 'Medium' },
+            
+            // Phase 12: Day 2 Operations
+            { phase: 'Phase 12: Day 2 Ops', id: '12.1', name: 'Patching and Updates', objective: 'Test update procedures for VMs and platform', priority: 'High' },
+            { phase: 'Phase 12: Day 2 Ops', id: '12.2', name: 'Troubleshooting and Support', objective: 'Evaluate troubleshooting capabilities', priority: 'Medium' },
+            
+            // Phase 13: Security and Compliance
+            { phase: 'Phase 13: Security', id: '13.1', name: 'Security Hardening', objective: 'Validate security features', priority: 'High' },
+            { phase: 'Phase 13: Security', id: '13.2', name: 'Compliance Validation', objective: 'Test compliance framework support', priority: 'High' },
+            
+            // Phase 14: Cost Analysis
+            { phase: 'Phase 14: Cost Analysis', id: '14.1', name: 'TCO Comparison', objective: 'Calculate total cost of ownership', priority: 'High' }
+        ];
+
+        function initializeTable() {
+            const tbody = document.getElementById('testTableBody');
+            let currentPhase = '';
+            
+            testCases.forEach(test => {
+                if (test.phase !== currentPhase) {
+                    currentPhase = test.phase;
+                    const phaseRow = document.createElement('tr');
+                    phaseRow.className = 'phase-header';
+                    phaseRow.innerHTML = `<td colspan="9">${test.phase}</td>`;
+                    tbody.appendChild(phaseRow);
+                }
+
+                const row = document.createElement('tr');
+                row.dataset.phase = test.phase;
+                row.dataset.status = 'Pending';
+                
+                const priorityClass = test.priority === 'High' ? 'priority-high' : 
+                                     test.priority === 'Medium' ? 'priority-medium' : 'priority-low';
+                
+                row.innerHTML = `
+                    <td>${test.id}</td>
+                    <td class="phase-cell">${test.phase.split(':')[0]}</td>
+                    <td>${test.name}</td>
+                    <td>${test.objective}</td>
+                    <td class="${priorityClass}">${test.priority}</td>
+                    <td>
+                        <select class="status-select pending" onchange="updateStatus(this)">
+                            <option value="Pending">Pending</option>
+                            <option value="Pass">Pass</option>
+                            <option value="Fail">Fail</option>
+                        </select>
+                    </td>
+                    <td><input type="date" onchange="saveData()"></td>
+                    <td><input type="text" placeholder="Tester name" onchange="saveData()"></td>
+                    <td><textarea placeholder="Add comments..." onchange="saveData()"></textarea></td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            populatePhaseFilter();
+            updateStats();
+        }
+
+        function populatePhaseFilter() {
+            const phaseFilter = document.getElementById('phaseFilter');
+            const phases = [...new Set(testCases.map(t => t.phase))];
+            phases.forEach(phase => {
+                const option = document.createElement('option');
+                option.value = phase;
+                option.textContent = phase;
+                phaseFilter.appendChild(option);
+            });
+        }
+
+        function updateStatus(select) {
+            const row = select.closest('tr');
+            const status = select.value;
+            
+            select.className = `status-select ${status.toLowerCase()}`;
+            row.dataset.status = status;
+            
+            updateStats();
+            saveData();
+        }
+
+        function updateStats() {
+            const rows = document.querySelectorAll('#testTableBody tr:not(.phase-header)');
+            const total = rows.length;
+            let passed = 0, failed = 0, pending = 0;
+
+            rows.forEach(row => {
+                const status = row.dataset.status;
+                if (status === 'Pass') passed++;
+                else if (status === 'Fail') failed++;
+                else pending++;
+            });
+
+            document.getElementById('totalTests').textContent = total;
+            document.getElementById('passedTests').textContent = passed;
+            document.getElementById('failedTests').textContent = failed;
+            document.getElementById('pendingTests').textContent = pending;
+            
+            const completion = total > 0 ? Math.round(((passed + failed) / total) * 100) : 0;
+            document.getElementById('completionPct').textContent = completion + '%';
+        }
+
+        function filterTable() {
+            const phaseFilter = document.getElementById('phaseFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const rows = document.querySelectorAll('#testTableBody tr');
+
+            rows.forEach(row => {
+                if (row.classList.contains('phase-header')) {
+                    row.style.display = '';
+                    return;
+                }
+
+                const rowPhase = row.dataset.phase;
+                const rowStatus = row.dataset.status;
+                
+                const phaseMatch = phaseFilter === 'all' || rowPhase === phaseFilter;
+                const statusMatch = statusFilter === 'all' || rowStatus === statusFilter;
+                
+                row.style.display = (phaseMatch && statusMatch) ? '' : 'none';
+            });
+        }
+
+        function saveData() {
+            const rows = document.querySelectorAll('#testTableBody tr:not(.phase-header)');
+            const data = [];
+
+            rows.forEach(row => {
+                const cells = row.cells;
+                data.push({
+                    id: cells[0].textContent,
+                    phase: cells[1].textContent,
+                    name: cells[2].textContent,
+                    objective: cells[3].textContent,
+                    priority: cells[4].textContent,
+                    status: cells[5].querySelector('select').value,
+                    date: cells[6].querySelector('input').value,
+                    tester: cells[7].querySelector('input').value,
+                    comments: cells[8].querySelector('textarea').value
+                });
+            });
+
+            localStorage.setItem('ocpVirtTestData', JSON.stringify(data));
+        }
+
+        function saveProgress() {
+            saveData();
+            alert('Progress saved successfully!');
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('ocpVirtTestData');
+            if (!saved) {
+                alert('No saved progress found.');
+                return;
+            }
+
+            const data = JSON.parse(saved);
+            const rows = document.querySelectorAll('#testTableBody tr:not(.phase-header)');
+
+            rows.forEach((row, index) => {
+                if (data[index]) {
+                    const cells = row.cells;
+                    const select = cells[5].querySelector('select');
+                    select.value = data[index].status;
+                    updateStatus(select);
+                    
+                    cells[6].querySelector('input').value = data[index].date;
+                    cells[7].querySelector('input').value = data[index].tester;
+                    cells[8].querySelector('textarea').value = data[index].comments;
+                }
+            });
+
+            updateStats();
+            alert('Progress loaded successfully!');
+        }
+
+        function exportToExcel() {
+            const rows = document.querySelectorAll('#testTableBody tr:not(.phase-header)');
+            const data = [['Test ID', 'Phase', 'Test Case', 'Objective', 'Priority', 'Status', 'Date Tested', 'Tester', 'Comments']];
+
+            rows.forEach(row => {
+                const cells = row.cells;
+                data.push([
+                    cells[0].textContent,
+                    cells[1].textContent,
+                    cells[2].textContent,
+                    cells[3].textContent,
+                    cells[4].textContent,
+                    cells[5].querySelector('select').value,
+                    cells[6].querySelector('input').value,
+                    cells[7].querySelector('input').value,
+                    cells[8].querySelector('textarea').value
+                ]);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            
+            // Set column widths
+            ws['!cols'] = [
+                {wch: 10},  // Test ID
+                {wch: 20},  // Phase
+                {wch: 35},  // Test Case
+                {wch: 45},  // Objective
+                {wch: 10},  // Priority
+                {wch: 12},  // Status
+                {wch: 15},  // Date
+                {wch: 20},  // Tester
+                {wch: 50}   // Comments
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Test Results');
+            
+            // Add summary sheet
+            const stats = [
+                ['OpenShift Virtualization Test Plan - Summary'],
+                [''],
+                ['Total Test Cases', document.getElementById('totalTests').textContent],
+                ['Passed', document.getElementById('passedTests').textContent],
+                ['Failed', document.getElementById('failedTests').textContent],
+                ['Pending', document.getElementById('pendingTests').textContent],
+                ['Completion %', document.getElementById('completionPct').textContent],
+                [''],
+                ['Export Date', new Date().toLocaleDateString()]
+            ];
+            
+            const summaryWs = XLSX.utils.aoa_to_sheet(stats);
+            XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
+
+            XLSX.writeFile(wb, 'OpenShift_Virtualization_Test_Plan.xlsx');
+        }
+
+        // Initialize on page load
+        window.onload = initializeTable;
+    </script>
+</body>
+</html>

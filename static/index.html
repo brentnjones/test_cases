@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenShift Virtualization Test Plan Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #cc0000 0%, #8b0000 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #cc0000;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #a30000;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(204, 0, 0, 0.4);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-group select {
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .stats {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #cc0000;
+        }
+
+        .stat-card.pass {
+            border-left-color: #10b981;
+        }
+
+        .stat-card.fail {
+            border-left-color: #ef4444;
+        }
+
+        .stat-card.pending {
+            border-left-color: #f59e0b;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            padding: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        thead {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .phase-cell {
+            font-weight: 600;
+            color: #cc0000;
+        }
+
+        select.status-select {
+            padding: 6px 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        select.status-select.pass {
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+
+        select.status-select.fail {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        select.status-select.pending {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        input[type="date"] {
+            padding: 6px 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .priority-high {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .priority-medium {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+
+        .priority-low {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .phase-header {
+            background: #cc0000;
+            color: white;
+            font-weight: 700;
+        }
+
+        .phase-header td {
+            padding: 12px 15px;
+            border: none;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: #10b981;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .table-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="notification" class="notification"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1><img src="static/redhat-logo.png" alt="Red Hat" style="height: 32px; vertical-align: middle; margin-right: 6px; margin-bottom: 8px;">Red Hat OpenShift Virtualization Test Plan Tracker</h1>
+            <p>VMware Migration Evaluation - Comprehensive Test Suite</p>
+        </div>        
+
+        <div class="controls">
+            <button class="btn btn-success" onclick="exportToExcel()">
+                📊 Export to Excel
+            </button>
+            <button class="btn btn-primary" onclick="refreshData()">
+                🔄 Refresh Data
+            </button>
+            <div class="filter-group">
+                <label>Filter by Phase:</label>
+                <select id="phaseFilter" onchange="filterTable()">
+                    <option value="all">All Phases</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Filter by Status:</label>
+                <select id="statusFilter" onchange="filterTable()">
+                    <option value="all">All Statuses</option>
+                    <option value="Pass">Pass</option>
+                    <option value="Fail">Fail</option>
+                    <option value="Pending">Pending</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Total Tests</div>
+                <div class="stat-value" id="totalTests">0</div>
+            </div>
+            <div class="stat-card pass">
+                <div class="stat-label">Passed</div>
+                <div class="stat-value" id="passedTests">0</div>
+            </div>
+            <div class="stat-card fail">
+                <div class="stat-label">Failed</div>
+                <div class="stat-value" id="failedTests">0</div>
+            </div>
+            <div class="stat-card pending">
+                <div class="stat-label">Pending</div>
+                <div class="stat-value" id="pendingTests">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Completion %</div>
+                <div class="stat-value" id="completionPct">0%</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="testTable">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Test ID</th>
+                        <th style="width: 150px;">Phase</th>
+                        <th style="width: 250px;">Test Case</th>
+                        <th>Objective</th>
+                        <th style="width: 100px;">Priority</th>
+                        <th style="width: 120px;">Status</th>
+                        <th style="width: 120px;">Date Tested</th>
+                        <th style="width: 150px;">Tester</th>
+                        <th style="width: 250px;">Comments</th>
+                    </tr>
+                </thead>
+                <tbody id="testTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let testData = [];
+        let resultsData = {};
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.background = type === 'success' ? '#10b981' : '#ef4444';
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/test-cases`);
+                const data = await response.json();
+                testData = data.test_cases;
+                resultsData = data.results;
+                initializeTable();
+                loadStats();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showNotification('Failed to load data', 'error');
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/stats`);
+                const stats = await response.json();
+                
+                document.getElementById('totalTests').textContent = stats.total;
+                document.getElementById('passedTests').textContent = stats.passed;
+                document.getElementById('failedTests').textContent = stats.failed;
+                document.getElementById('pendingTests').textContent = stats.pending;
+                document.getElementById('completionPct').textContent = stats.completion_pct + '%';
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        function initializeTable() {
+            const tbody = document.getElementById('testTableBody');
+            tbody.innerHTML = '';
+            let currentPhase = '';
+            
+            testData.forEach(test => {
+                if (test.phase !== currentPhase) {
+                    currentPhase = test.phase;
+                    const phaseRow = document.createElement('tr');
+                    phaseRow.className = 'phase-header';
+                    phaseRow.innerHTML = `<td colspan="9">${test.phase}</td>`;
+                    tbody.appendChild(phaseRow);
+                }
+
+                const result = resultsData[test.id] || {status: 'Pending', date_tested: '', tester: '', comments: ''};
+                const row = document.createElement('tr');
+                row.dataset.phase = test.phase;
+                row.dataset.status = result.status;
+                
+                const priorityClass = test.priority === 'High' ? 'priority-high' : 
+                                     test.priority === 'Medium' ? 'priority-medium' : 'priority-low';
+                
+                row.innerHTML = `
+                    <td>${test.id}</td>
+                    <td class="phase-cell">${test.phase.split(':')[0]}</td>
+                    <td>${test.name}</td>
+                    <td>${test.objective}</td>
+                    <td class="${priorityClass}">${test.priority}</td>
+                    <td>
+                        <select class="status-select ${result.status.toLowerCase()}" 
+                                data-test-id="${test.id}" 
+                                onchange="updateStatus(this)">
+                            <option value="Pending" ${result.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Pass" ${result.status === 'Pass' ? 'selected' : ''}>Pass</option>
+                            <option value="Fail" ${result.status === 'Fail' ? 'selected' : ''}>Fail</option>
+                        </select>
+                    </td>
+                    <td><input type="date" value="${result.date_tested || ''}" 
+                               data-test-id="${test.id}" onchange="updateResult(this, 'date_tested')"></td>
+                    <td><input type="text" placeholder="Tester name" value="${result.tester || ''}" 
+                               data-test-id="${test.id}" onchange="updateResult(this, 'tester')"></td>
+                    <td><textarea placeholder="Add comments..." data-test-id="${test.id}" 
+                                  onchange="updateResult(this, 'comments')">${result.comments || ''}</textarea></td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            populatePhaseFilter();
+        }
+
+        function populatePhaseFilter() {
+            const phaseFilter = document.getElementById('phaseFilter');
+            const currentValue = phaseFilter.value;
+            phaseFilter.innerHTML = '<option value="all">All Phases</option>';
+            
+            const phases = [...new Set(testData.map(t => t.phase))];
+            phases.forEach(phase => {
+                const option = document.createElement('option');
+                option.value = phase;
+                option.textContent = phase;
+                phaseFilter.appendChild(option);
+            });
+            
+            phaseFilter.value = currentValue;
+        }
+
+        async function updateStatus(select) {
+            const testId = select.dataset.testId;
+            const status = select.value;
+            const row = select.closest('tr');
+            
+            select.className = `status-select ${status.toLowerCase()}`;
+            row.dataset.status = status;
+            
+            await saveResult(testId, {status});
+        }
+
+        async function updateResult(input, field) {
+            const testId = input.dataset.testId;
+            const value = input.value;
+            await saveResult(testId, {[field]: value});
+        }
+
+        async function saveResult(testId, data) {
+            try {
+                const response = await fetch(`${API_BASE}/api/test-results/${testId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    loadStats();
+                } else {
+                    showNotification('Failed to save', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving result:', error);
+                showNotification('Failed to save', 'error');
+            }
+        }
+
+        function filterTable() {
+            const phaseFilter = document.getElementById('phaseFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const rows = document.querySelectorAll('#testTableBody tr');
+
+            rows.forEach(row => {
+                if (row.classList.contains('phase-header')) {
+                    // Check if this phase header has any visible rows after filtering
+                    const phaseText = row.textContent.trim();
+                    let hasVisibleRows = false;
+                    
+                    // Look ahead to find rows in this phase
+                    let nextRow = row.nextElementSibling;
+                    while (nextRow && !nextRow.classList.contains('phase-header')) {
+                        const rowPhase = nextRow.dataset.phase;
+                        const rowStatus = nextRow.dataset.status;
+                        
+                        const phaseMatch = phaseFilter === 'all' || rowPhase === phaseFilter;
+                        const statusMatch = statusFilter === 'all' || rowStatus === statusFilter;
+                        
+                        if (phaseMatch && statusMatch) {
+                            hasVisibleRows = true;
+                            break;
+                        }
+                        nextRow = nextRow.nextElementSibling;
+                    }
+                    
+                    row.style.display = hasVisibleRows ? '' : 'none';
+                    return;
+                }
+
+                const rowPhase = row.dataset.phase;
+                const rowStatus = row.dataset.status;
+                
+                const phaseMatch = phaseFilter === 'all' || rowPhase === phaseFilter;
+                const statusMatch = statusFilter === 'all' || rowStatus === statusFilter;
+                
+                row.style.display = (phaseMatch && statusMatch) ? '' : 'none';
+            });
+        }
+
+        async function refreshData() {
+            showNotification('Refreshing data...');
+            await loadData();
+            showNotification('Data refreshed successfully!');
+        }
+
+        async function exportToExcel() {
+            try {
+                const response = await fetch(`${API_BASE}/api/export`);
+                const exportData = await response.json();
+                
+                const data = [['Test ID', 'Phase', 'Test Case', 'Objective', 'Priority', 'Status', 'Date Tested', 'Tester', 'Comments']];
+
+                exportData.forEach(item => {
+                    const tc = item.test_case;
+                    const result = item.result || {status: 'Pending', date_tested: '', tester: '', comments: ''};
+                    data.push([
+                        tc.id,
+                        tc.phase,
+                        tc.name,
+                        tc.objective,
+                        tc.priority,
+                        result.status,
+                        result.date_tested || '',
+                        result.tester || '',
+                        result.comments || ''
+                    ]);
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                
+                ws['!cols'] = [
+                    {wch: 10}, {wch: 20}, {wch: 35}, {wch: 45}, {wch: 10},
+                    {wch: 12}, {wch: 15}, {wch: 20}, {wch: 50}
+                ];
+
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Test Results');
+                
+                const stats = [
+                    ['OpenShift Virtualization Test Plan - Summary'],
+                    [''],
+                    ['Total Test Cases', document.getElementById('totalTests').textContent],
+                    ['Passed', document.getElementById('passedTests').textContent],
+                    ['Failed', document.getElementById('failedTests').textContent],
+                    ['Pending', document.getElementById('pendingTests').textContent],
+                    ['Completion %', document.getElementById('completionPct').textContent],
+                    [''],
+                    ['Export Date', new Date().toLocaleDateString()]
+                ];
+                
+                const summaryWs = XLSX.utils.aoa_to_sheet(stats);
+                XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
+
+                XLSX.writeFile(wb, 'OpenShift_Virtualization_Test_Plan.xlsx');
+                showNotification('Excel file exported successfully!');
+            } catch (error) {
+                console.error('Error exporting:', error);
+                showNotification('Failed to export', 'error');
+            }
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>
