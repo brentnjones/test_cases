@@ -2,7 +2,7 @@
 
 A containerized web application for tracking OpenShift Virtualization test cases and results, deployed on OpenShift with PostgreSQL database persistence.
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Log into OpenShift
@@ -14,11 +14,11 @@ oc login
 
 That's it! The script will configure the internal registry, deploy PostgreSQL, build and deploy the application.
 
-📖 **For POC demos**: See [POC_GUIDE.md](POC_GUIDE.md) for presentation tips and demo scenarios  
-📖 **For detailed steps**: See [DEPLOYMENT.md](DEPLOYMENT.md) for manual deployment options  
-📖 **For troubleshooting**: See [QUICKSTART.md](QUICKSTART.md) for common issues
+**For POC demos**: See [POC_GUIDE.md](POC_GUIDE.md) for presentation tips and demo scenarios  
+**For detailed steps**: See [DEPLOYMENT.md](DEPLOYMENT.md) for manual deployment options  
+**For troubleshooting**: See [QUICKSTART.md](QUICKSTART.md) for common issues
 
-## 🏗️ Architecture
+## Architecture
 
 - **Backend**: Python Flask REST API
 - **Database**: PostgreSQL 15
@@ -26,20 +26,20 @@ That's it! The script will configure the internal registry, deploy PostgreSQL, b
 - **Container**: Docker/Podman
 - **Platform**: OpenShift Container Platform
 
-## 📋 Features
+## Features
 
-- ✅ Track 36 comprehensive test cases across 14 phases
-- ✅ Real-time status updates (Pass/Fail/Pending)
-- ✅ Date tracking and tester assignment
-- ✅ Comments and notes for each test
-- ✅ Statistics dashboard
-- ✅ Excel export functionality
-- ✅ Filter by phase and status
-- ✅ Database persistence
-- ✅ RESTful API
-- ✅ OpenShift-ready deployment
+- Track 36 comprehensive test cases across 14 phases
+- Real-time status updates (Pass/Fail/Pending)
+- Date tracking and tester assignment
+- Comments and notes for each test
+- Statistics dashboard
+- Excel export functionality
+- Filter by phase and status
+- Database persistence
+- RESTful API
+- OpenShift-ready deployment
 
-## 🚀 Quick Start - Local Development
+## Quick Start - Local Development
 
 ### Prerequisites
 
@@ -140,7 +140,7 @@ Run:
 docker-compose up -d
 ```
 
-## ☁️ OpenShift Deployment
+## OpenShift Deployment
 
 ### Quick Deployment
 
@@ -151,11 +151,11 @@ For a complete OpenShift POC deployment with internal registry:
 ```
 
 This automated script will:
-1. ✅ Enable and configure the internal registry with persistent storage
-2. ✅ Deploy PostgreSQL with persistent storage  
-3. ✅ Build the application using the internal registry
-4. ✅ Deploy with 2 replicas and health checks
-5. ✅ Create a secure HTTPS route
+1. Enable and configure the internal registry with persistent storage
+2. Deploy PostgreSQL with persistent storage  
+3. Build the application using the internal registry
+4. Deploy with 2 replicas and health checks
+5. Create a secure HTTPS route
 
 **Prerequisites**:
 - OpenShift CLI (`oc`) installed and logged in
@@ -182,7 +182,7 @@ oc logs -f deployment/postgres
 curl $(oc get route testcase-tracker -o jsonpath='{.spec.host}')/api/health
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -214,7 +214,7 @@ oc rollout restart deployment/testcase-tracker
 2. **Use Network Policies** to restrict database access
 3. **Enable TLS** for the route (already configured in deployment)
 
-## 📊 API Documentation
+## API Documentation
 
 ### pgAdmin Database Access (Optional)
 
@@ -274,7 +274,7 @@ curl -X PUT https://your-app-url/api/test-results/1.1 \
 curl https://your-app-url/api/stats
 ```
 
-## 🛠️ Maintenance
+## Maintenance
 
 ### Database Backup
 
@@ -343,7 +343,7 @@ oc get imagestream
 oc start-build testcase-tracker --follow
 ```
 
-## 📝 Test Cases Included
+## Test Cases Included
 
 The application includes 36 test cases across 14 phases:
 
@@ -362,18 +362,18 @@ The application includes 36 test cases across 14 phases:
 13. **Phase 13**: Security and Compliance (2 tests)
 14. **Phase 14**: Cost Analysis (1 test)
 
-## 🤝 Contributing
+## Contributing
 
 To add new test cases or features:
 
 1. Update `app.py` to add new test cases in the `init_test_cases()` function
 2. Rebuild and redeploy the application
 
-## 📄 License
+## License
 
 This project is provided as-is for internal use.
 
-## 🔗 Related Resources
+## Related Resources
 
 - [OpenShift Virtualization Documentation](https://docs.openshift.com/container-platform/latest/virt/about-virt.html)
 - [Migration Toolkit for Virtualization](https://docs.openshift.com/container-platform/latest/migration_toolkit_for_virtualization/about-mtv.html)
